@@ -10,15 +10,16 @@ import {
 } from "./football";
 import { fd, toFixture, type RawMatch } from "./football.server";
 
-type TeamWithVenue = TeamRef & { venue: string | null };
+type TeamWithVenue = TeamRef & { venue: string | null; league: string | null };
 
 async function allTeams(): Promise<TeamWithVenue[]> {
   const byId = new Map<number, TeamWithVenue>();
   for (const c of COMPETITIONS) {
-    const res = await fd<{ teams: (TeamRef & { venue?: string })[] }>(
+    const res = await fd<{ competition?: { name?: string }; teams: (TeamRef & { venue?: string })[] }>(
       `/competitions/${c}/teams`,
       12 * 60 * 60 * 1000,
     );
+    const compName = res.competition?.name ?? null;
     for (const t of res.teams) {
       const prev = byId.get(t.id);
       byId.set(t.id, {
@@ -28,11 +29,27 @@ async function allTeams(): Promise<TeamWithVenue[]> {
         tla: t.tla ?? "",
         crest: t.crest ?? "",
         venue: t.venue ?? prev?.venue ?? null,
+        // Prefer the domestic league over the Champions League.
+        league: c === "CL" ? (prev?.league ?? compName) : compName,
       });
     }
   }
   return [...byId.values()];
 }
+
+export type TeamSuggestion = { id: number; name: string; shortName: string; crest: string; league: string | null };
+
+export const getTeamDirectory = createServerFn({ method: "GET" }).handler(async () => {
+  try {
+    const teams = await allTeams();
+    const list: TeamSuggestion[] = teams.map((t) => ({
+      id: t.id, name: t.name, shortName: t.shortName, crest: t.crest, league: t.league,
+    }));
+    return { teams: list, error: null as string | null };
+  } catch (e) {
+    return { teams: [] as TeamSuggestion[], error: (e as Error).message };
+  }
+});
 
 async function venueMap() {
   try {
