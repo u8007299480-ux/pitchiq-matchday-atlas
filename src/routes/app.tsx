@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { BarChart3, CreditCard, Globe, History, LifeBuoy, Radar, Trophy, User } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Crest } from "@/components/FixtureRow";
-import { analyzeMatch, type Analysis } from "@/lib/football.functions";
+import { TeamSearch } from "@/components/TeamSearch";
+import { analyzeMatch, getTeamDirectory, type Analysis, type TeamSuggestion } from "@/lib/football.functions";
 import { formatKickoff, resultFor, type Fixture } from "@/lib/football";
 
 export const Route = createFileRoute("/app")({
@@ -29,6 +30,15 @@ function AppPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Analysis | null>(null);
+  const [teams, setTeams] = useState<TeamSuggestion[]>([]);
+  const [teamsLoading, setTeamsLoading] = useState(true);
+
+  useEffect(() => {
+    getTeamDirectory()
+      .then((r) => setTeams(r.teams))
+      .catch(() => {})
+      .finally(() => setTeamsLoading(false));
+  }, []);
 
   async function run(e: React.FormEvent) {
     e.preventDefault();
@@ -72,10 +82,10 @@ function AppPage() {
           <form onSubmit={run} className="mt-8 rounded-2xl border border-border bg-card p-8">
             <p className="eyebrow text-[10px] text-muted-foreground">Match to analyze</p>
             <TeamSlot crest={result?.teamA.crest} />
-            <input className="field" placeholder="Barcelona" value={a} onChange={(e) => setA(e.target.value)} required />
+            <TeamSearch placeholder="Barcelona" value={a} onChange={setA} teams={teams} loading={teamsLoading} />
             <p className="my-3 text-center font-mono text-[10px] tracking-widest text-muted-foreground">VS</p>
             <TeamSlot crest={result?.teamB.crest} />
-            <input className="field" placeholder="Real Madrid" value={b} onChange={(e) => setB(e.target.value)} required />
+            <TeamSearch placeholder="Real Madrid" value={b} onChange={setB} teams={teams} loading={teamsLoading} />
             <button className="btn-primary mt-6 w-full" disabled={loading}>
               <Radar className="h-4 w-4" /> {loading ? "Analyzing…" : "Analyze match with AI"}
             </button>
