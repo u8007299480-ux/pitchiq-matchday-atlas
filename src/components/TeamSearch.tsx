@@ -49,7 +49,7 @@ export function TeamSearch({
           if (!show || results.length === 0) return;
           if (e.key === "ArrowDown") { e.preventDefault(); setActive((i) => (i + 1) % results.length); }
           if (e.key === "ArrowUp") { e.preventDefault(); setActive((i) => (i - 1 + results.length) % results.length); }
-          if (e.key === "Enter") { e.preventDefault(); pick(results[active]); }
+          if (e.key === "Enter") { const t = results[active]; if (t) { e.preventDefault(); pick(t); } }
           if (e.key === "Escape") setOpen(false);
         }}
       />
