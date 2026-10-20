@@ -20,7 +20,7 @@ export function matchTeams(teams: TeamSuggestion[], query: string, limit = 8) {
 }
 
 export function TeamSearch({
-  value, onChange, teams, placeholder, loading,
+  value, onChange, onPick, teams, placeholder, loading,
 }: { value: string; onChange: (v: string) => void; onPick?: (name: string) => void; teams: TeamSuggestion[]; placeholder: string; loading: boolean }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
