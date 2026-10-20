@@ -7,7 +7,7 @@ const cache = new Map<string, { t: number; v: unknown }>();
 export async function fd<T>(path: string, ttlMs = 10 * 60 * 1000): Promise<T> {
   const hit = cache.get(path);
   if (hit && Date.now() - hit.t < ttlMs) return hit.v as T;
-  const key = process.env.FOOTBALL_DATA_API_KEY;
+  const key = process.env["FOOTBALL_DATA_API_KEY"];
   if (!key) throw new Error("Football data key is not configured.");
   const res = await fetch(BASE + path, { headers: { "X-Auth-Token": key } });
   if (res.status === 429) {

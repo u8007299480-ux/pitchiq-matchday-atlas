@@ -99,7 +99,7 @@ function AppPage() {
   );
 }
 
-function TeamSlot({ crest }: { crest?: string }) {
+function TeamSlot({ crest }: { crest?: string | undefined }) {
   return (
     <div className="my-3 flex justify-center">
       <span className="flex h-12 w-12 items-center justify-center rounded-full border border-input font-bold text-primary">
