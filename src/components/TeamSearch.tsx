@@ -4,9 +4,9 @@ import type { TeamSuggestion } from "@/lib/football.functions";
 export const normTeam = (s: string) =>
   s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9 ]/g, "").trim();
 
-export function matchTeams(teams: TeamSuggestion[], query: string, limit = 6) {
+export function matchTeams(teams: TeamSuggestion[], query: string, limit = 8) {
   const q = normTeam(query);
-  if (q.length < 2) return [];
+  if (q.length < 1) return [];
   const scored = teams
     .map((t) => {
       const n = normTeam(t.name);
@@ -21,14 +21,15 @@ export function matchTeams(teams: TeamSuggestion[], query: string, limit = 6) {
 
 export function TeamSearch({
   value, onChange, teams, placeholder, loading,
-}: { value: string; onChange: (v: string) => void; teams: TeamSuggestion[]; placeholder: string; loading: boolean }) {
+}: { value: string; onChange: (v: string) => void; onPick?: (name: string) => void; teams: TeamSuggestion[]; placeholder: string; loading: boolean }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const results = useMemo(() => matchTeams(teams, value), [teams, value]);
-  const show = open && normTeam(value).length >= 2;
+  const show = open && normTeam(value).length >= 1;
 
   function pick(t: TeamSuggestion) {
     onChange(t.name);
+    onPick?.(t.name);
     setOpen(false);
   }
 
