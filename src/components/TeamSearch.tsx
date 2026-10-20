@@ -11,7 +11,7 @@ export function matchTeams(teams: TeamSuggestion[], query: string, limit = 8) {
     .map((t) => {
       const n = normTeam(t.name);
       const s = normTeam(t.shortName);
-      const score = s.startsWith(q) || n.startsWith(q) ? 0 : n.split(" ").some((w) => w.startsWith(q)) ? 1 : n.includes(q) || s.includes(q) ? 2 : 9;
+      const score = s.startsWith(q) ? 0 : n.startsWith(q) ? 0.5 : n.split(" ").some((w) => w.startsWith(q)) ? 1 : n.includes(q) || s.includes(q) ? 2 : 9;
       return { t, score };
     })
     .filter((x) => x.score < 9)
