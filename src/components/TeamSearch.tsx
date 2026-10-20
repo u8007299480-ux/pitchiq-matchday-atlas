@@ -4,31 +4,33 @@ import type { TeamSuggestion } from "@/lib/football.functions";
 export const normTeam = (s: string) =>
   s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9 ]/g, "").trim();
 
-export function matchTeams(teams: TeamSuggestion[], query: string, limit = 6) {
+export function matchTeams(teams: TeamSuggestion[], query: string, limit = 8) {
   const q = normTeam(query);
-  if (q.length < 2) return [];
+  if (q.length < 1) return [];
   const scored = teams
     .map((t) => {
       const n = normTeam(t.name);
+      const core = normTeam(t.name.replace(/^([A-Z0-9.]{1,4}\s+)+/, ""));
       const s = normTeam(t.shortName);
-      const score = s.startsWith(q) || n.startsWith(q) ? 0 : n.split(" ").some((w) => w.startsWith(q)) ? 1 : n.includes(q) || s.includes(q) ? 2 : 9;
+      const score = core.startsWith(q) ? 0 : s.startsWith(q) ? 0.3 : n.startsWith(q) ? 0.5 : n.split(" ").some((w) => w.startsWith(q)) ? 1 : n.includes(q) || s.includes(q) ? 2 : 9;
       return { t, score };
     })
     .filter((x) => x.score < 9)
-    .sort((a, b) => a.score - b.score || a.t.shortName.localeCompare(b.t.shortName));
+    .sort((a, b) => a.score - b.score || a.t.name.length - b.t.name.length);
   return scored.slice(0, limit).map((x) => x.t);
 }
 
 export function TeamSearch({
-  value, onChange, teams, placeholder, loading,
-}: { value: string; onChange: (v: string) => void; teams: TeamSuggestion[]; placeholder: string; loading: boolean }) {
+  value, onChange, onPick, teams, placeholder, loading,
+}: { value: string; onChange: (v: string) => void; onPick?: (name: string) => void; teams: TeamSuggestion[]; placeholder: string; loading: boolean }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const results = useMemo(() => matchTeams(teams, value), [teams, value]);
-  const show = open && normTeam(value).length >= 2;
+  const show = open && normTeam(value).length >= 1;
 
   function pick(t: TeamSuggestion) {
     onChange(t.name);
+    onPick?.(t.name);
     setOpen(false);
   }
 

@@ -40,12 +40,13 @@ function AppPage() {
       .finally(() => setTeamsLoading(false));
   }, []);
 
-  async function run(e: React.FormEvent) {
-    e.preventDefault();
+  async function run(e?: React.FormEvent, ta = a, tb = b) {
+    e?.preventDefault();
+    if (ta.trim().length < 2 || tb.trim().length < 2) return;
     setLoading(true);
     setError(null);
     try {
-      const res = await analyzeMatch({ data: { teamA: a, teamB: b } });
+      const res = await analyzeMatch({ data: { teamA: ta, teamB: tb } });
       setResult(res.analysis);
       setError(res.error);
     } catch {
@@ -82,10 +83,10 @@ function AppPage() {
           <form onSubmit={run} className="mt-8 rounded-2xl border border-border bg-card p-8">
             <p className="eyebrow text-[10px] text-muted-foreground">Match to analyze</p>
             <TeamSlot crest={result?.teamA.crest} />
-            <TeamSearch placeholder="Barcelona" value={a} onChange={setA} teams={teams} loading={teamsLoading} />
+            <TeamSearch placeholder="Barcelona" value={a} onChange={setA} onPick={(n) => { if (b.trim()) void run(undefined, n, b); }} teams={teams} loading={teamsLoading} />
             <p className="my-3 text-center font-mono text-[10px] tracking-widest text-muted-foreground">VS</p>
             <TeamSlot crest={result?.teamB.crest} />
-            <TeamSearch placeholder="Real Madrid" value={b} onChange={setB} teams={teams} loading={teamsLoading} />
+            <TeamSearch placeholder="Real Madrid" value={b} onChange={setB} onPick={(n) => { if (a.trim()) void run(undefined, a, n); }} teams={teams} loading={teamsLoading} />
             <button className="btn-primary mt-6 w-full" disabled={loading}>
               <Radar className="h-4 w-4" /> {loading ? "Analyzing…" : "Analyze match with AI"}
             </button>
