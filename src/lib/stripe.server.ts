@@ -31,7 +31,7 @@ export async function stripe<T = Record<string, unknown>>(
   const res = await fetch(`https://api.stripe.com/v1${path}${qs}`, {
     method,
     headers,
-    body: method === "POST" ? encode(params) : undefined,
+    body: method === "POST" ? encode(params) : null,
   });
   const json = (await res.json()) as T & { error?: { message?: string } };
   if (!res.ok) throw new Error(json.error?.message ?? `Stripe error (${res.status})`);
