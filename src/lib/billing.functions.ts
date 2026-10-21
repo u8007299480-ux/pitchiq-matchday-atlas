@@ -68,7 +68,7 @@ export const startCheckout = createServerFn({ method: "POST" })
 /** Confirms a returning checkout by asking Stripe directly — never trusts the URL alone. */
 export const confirmCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { sessionId: string }) => z.object({ sessionId: z.string().regex(/^cs_(test|live)_[A-Za-z0-9]+$/) }).parse(d))
+  .validator((d: { sessionId: string }) => z.object({ sessionId: z.string().regex(/^cs_(test|live)_[A-Za-z0-9]+$/) }).parse(d))
   .handler(async ({ data, context }) => {
     const { stripe, saveSubscription } = await import("./stripe.server");
     type Sess = { client_reference_id: string | null; status: string; subscription: import("./stripe.server").StripeSubscription | null };

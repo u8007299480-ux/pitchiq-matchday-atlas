@@ -38,13 +38,13 @@ async function allTeams(): Promise<TeamWithVenue[]> {
   return [...byId.values()];
 }
 
-export type TeamSuggestion = { id: number; name: string; shortName: string; crest: string; league: string | null };
+export type TeamSuggestion = { id: number; name: string; shortName: string; tla: string; crest: string; league: string | null };
 
 export const getTeamDirectory = createServerFn({ method: "GET" }).handler(async () => {
   try {
     const teams = await allTeams();
     const list: TeamSuggestion[] = teams.map((t) => ({
-      id: t.id, name: t.name, shortName: t.shortName, crest: t.crest, league: t.league,
+      id: t.id, name: t.name, shortName: t.shortName, tla: t.tla, crest: t.crest, league: t.league,
     }));
     return { teams: list, error: null as string | null };
   } catch (e) {
@@ -105,7 +105,9 @@ export const getFeaturedPrediction = createServerFn({ method: "GET" }).handler(a
       list[0];
     if (!fixture) return { fixture: null, probabilities: null, error: null as string | null };
     const [h, a] = await Promise.all([recentResults(fixture.home.id), recentResults(fixture.away.id)]);
-    const probabilities = predictOutcome(teamStrength(fixture.home.id, h), teamStrength(fixture.away.id, a));
+    const probabilities = h.length > 0 && a.length > 0
+      ? predictOutcome(teamStrength(fixture.home.id, h), teamStrength(fixture.away.id, a))
+      : null;
     return { fixture, probabilities, error: null as string | null };
   } catch (e) {
     return { fixture: null, probabilities: null, error: (e as Error).message };
@@ -138,7 +140,7 @@ export type Analysis = {
   headToHead: Fixture[];
   formA: Fixture[];
   formB: Fixture[];
-  probabilities: Probabilities;
+  probabilities: Probabilities | null;
   homeId: number;
 };
 
@@ -178,10 +180,13 @@ export const analyzeMatch = createServerFn({ method: "POST" })
       }
 
       const homeId = nextMeeting?.home.id ?? teamA.id;
-      const sA = teamStrength(teamA.id, formA);
-      const sB = teamStrength(teamB.id, formB);
-      const p = homeId === teamA.id ? predictOutcome(sA, sB) : predictOutcome(sB, sA);
-      const probabilities = homeId === teamA.id ? p : { home: p.away, draw: p.draw, away: p.home };
+      let probabilities: Probabilities | null = null;
+      if (nextMeeting && formA.length > 0 && formB.length > 0) {
+        const sA = teamStrength(teamA.id, formA);
+        const sB = teamStrength(teamB.id, formB);
+        const p = homeId === teamA.id ? predictOutcome(sA, sB) : predictOutcome(sB, sA);
+        probabilities = homeId === teamA.id ? p : { home: p.away, draw: p.draw, away: p.home };
+      }
 
       const analysis: Analysis = { teamA, teamB, nextMeeting, headToHead, formA, formB, probabilities, homeId };
       return { analysis, error: null as string | null, locked: false };
