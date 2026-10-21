@@ -19,12 +19,22 @@ export const Route = createFileRoute("/api/public/stripe-webhook")({
         if (!(await verifyStripeSignature(payload, request.headers.get("stripe-signature"), secret))) {
           return new Response("Invalid signature", { status: 400 });
         }
-        const event = JSON.parse(payload) as { id: string; type: string; data: { object: Record<string, unknown> } };
+        let event: { id: string; type: string; data: { object: Record<string, unknown> } };
+        try {
+          event = JSON.parse(payload) as typeof event;
+          if (!event.id || !event.type || !event.data?.object) throw new Error("Invalid event payload");
+        } catch {
+          return new Response("Invalid event payload", { status: 400 });
+        }
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
         // Idempotency: skip events already processed.
-        const { error: dup } = await supabaseAdmin.from("stripe_events").insert({ id: event.id, type: event.type });
-        if (dup) return new Response("ok (duplicate)");
+        const { error: insertError } = await supabaseAdmin.from("stripe_events").insert({ id: event.id, type: event.type });
+        if (insertError?.code === "23505") return new Response("ok (duplicate)");
+        if (insertError) {
+          console.error("stripe webhook event could not be recorded", insertError.message);
+          return new Response("Event could not be recorded", { status: 500 });
+        }
 
         try {
           let subId: string | null = null;

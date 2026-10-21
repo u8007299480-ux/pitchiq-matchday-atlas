@@ -10,7 +10,7 @@ export function SiteHeader({ live }: { live: boolean | null }) {
           <Link to="/"><Logo /></Link>
           <nav className="hidden gap-8 font-mono text-xs tracking-[0.25em] text-muted-foreground md:flex">
             <a href="/#predictions" className="hover:text-foreground">PREDICTIONS</a>
-            <a href="/#engine" className="hover:text-foreground">AI ENGINE</a>
+            <a href="/#engine" className="hover:text-foreground">ANALYSIS</a>
             <Link to="/fixtures" className="hover:text-foreground">LEAGUES</Link>
             <a href="/#faq" className="hover:text-foreground">FAQ</a>
           </nav>

@@ -43,13 +43,16 @@ let cachedPrice: string | null = null;
 /** Finds the $9.99/month Premium price by lookup key, creating it once if missing. */
 export async function premiumPriceId(): Promise<string> {
   if (cachedPrice) return cachedPrice;
-  const list = await stripe<{ data: { id: string; unit_amount: number; recurring: { interval: string } | null }[] }>(
+  const list = await stripe<{ data: { id: string; currency: string; unit_amount: number; recurring: { interval: string } | null }[] }>(
     "GET",
     "/prices",
     { "lookup_keys[]": PREMIUM_LOOKUP_KEY, active: true, limit: 1 },
   );
-  const found = list.data.find((p) => p.unit_amount === PREMIUM_AMOUNT_CENTS && p.recurring?.interval === "month");
+  const found = list.data.find((p) => p.currency === "usd" && p.unit_amount === PREMIUM_AMOUNT_CENTS && p.recurring?.interval === "month");
   if (found) return (cachedPrice = found.id);
+  if (list.data.length > 0) {
+    throw new Error("The configured PitchIQ Premium price must be USD $9.99 per month. Check the Stripe test-mode price configuration.");
+  }
   const product = await stripe<{ id: string }>("POST", "/products", { name: "PitchIQ Premium" }, "pitchiq-premium-product-v1");
   const price = await stripe<{ id: string }>(
     "POST",
