@@ -9,6 +9,7 @@ import {
   type TeamRef,
 } from "./football";
 import { fd, toFixture, type RawMatch } from "./football.server";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 type TeamWithVenue = TeamRef & { venue: string | null; league: string | null };
 
@@ -141,11 +142,15 @@ export type Analysis = {
   homeId: number;
 };
 
+/** Premium-only: verifies the caller's subscription on the server before returning any analysis. */
 export const analyzeMatch = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: { teamA: string; teamB: string }) =>
     z.object({ teamA: z.string().trim().min(2).max(60), teamB: z.string().trim().min(2).max(60) }).parse(d),
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { data: premium } = await context.supabase.rpc("is_premium", { _user_id: context.userId });
+    if (!premium) return { analysis: null, error: null as string | null, locked: true };
     try {
       const teams = await allTeams();
       const teamA = findTeam(teams, data.teamA);
