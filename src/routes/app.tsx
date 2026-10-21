@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { BarChart3, CreditCard, Globe, History, LifeBuoy, Radar, Trophy, User } from "lucide-react";
 import { Logo } from "@/components/Logo";
@@ -35,26 +35,40 @@ function AppPage() {
   const [result, setResult] = useState<Analysis | null>(null);
   const [teams, setTeams] = useState<TeamSuggestion[]>([]);
   const [teamsLoading, setTeamsLoading] = useState(true);
+  const [teamsError, setTeamsError] = useState<string | null>(null);
   const [locked, setLocked] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const confirmedCheckoutRef = useRef<string | null>(null);
   const { session, ready } = useSession();
 
   useEffect(() => {
     if (!ready) return;
-    if (search.checkout === "cancelled") setNotice("Checkout cancelled — you have not been charged.");
-    if (search.checkout === "success" && search.session_id && session) {
-      setNotice("Confirming your subscription…");
-      confirmCheckout({ data: { sessionId: search.session_id } })
-        .then((r) => setNotice(r.premium ? "Welcome to Premium! Your analyses are unlocked." : "Payment not confirmed yet. If you completed checkout, refresh in a moment."))
-        .catch(() => setNotice("We couldn't confirm your payment yet. Please refresh in a moment."));
+    if (search.checkout === "cancelled") {
+      setNotice("Checkout cancelled — you have not been charged.");
+      window.history.replaceState(null, "", "/app");
+      return;
     }
-    if (search.checkout) window.history.replaceState(null, "", "/app");
-  }, [ready]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (search.checkout !== "success" || !search.session_id) return;
+    if (!session) {
+      setNotice("Sign in to verify your subscription. Premium access is not granted until the server confirms payment.");
+      return;
+    }
+    if (confirmedCheckoutRef.current === search.session_id) return;
+    confirmedCheckoutRef.current = search.session_id;
+    setNotice("Confirming your subscription…");
+    confirmCheckout({ data: { sessionId: search.session_id } })
+      .then((r) => setNotice(r.premium ? "Welcome to Premium! Your analyses are unlocked." : "Payment not confirmed yet. If you completed checkout, refresh in a moment."))
+      .catch(() => setNotice("We couldn't confirm your payment yet. Please refresh in a moment."))
+      .finally(() => window.history.replaceState(null, "", "/app"));
+  }, [ready, session, search.checkout, search.session_id]);
 
   useEffect(() => {
     getTeamDirectory()
-      .then((r) => setTeams(r.teams))
-      .catch(() => {})
+      .then((r) => {
+        setTeams(r.teams);
+        setTeamsError(r.error ? "Team suggestions are unavailable. Please try again later." : null);
+      })
+      .catch(() => setTeamsError("Team suggestions are unavailable. Please try again later."))
       .finally(() => setTeamsLoading(false));
   }, []);
 
@@ -103,12 +117,12 @@ function AppPage() {
           <form onSubmit={run} className="mt-8 rounded-2xl border border-border bg-card p-8">
             <p className="eyebrow text-[10px] text-muted-foreground">Match to analyze</p>
             <TeamSlot crest={result?.teamA.crest} />
-            <TeamSearch placeholder="Barcelona" value={a} onChange={setA} onPick={(n) => { if (b.trim()) void run(undefined, n, b); }} teams={teams} loading={teamsLoading} />
+            <TeamSearch placeholder="Barcelona" value={a} onChange={setA} onPick={(n) => { if (b.trim()) void run(undefined, n, b); }} teams={teams} loading={teamsLoading} error={teamsError} />
             <p className="my-3 text-center font-mono text-[10px] tracking-widest text-muted-foreground">VS</p>
             <TeamSlot crest={result?.teamB.crest} />
-            <TeamSearch placeholder="Real Madrid" value={b} onChange={setB} onPick={(n) => { if (a.trim()) void run(undefined, a, n); }} teams={teams} loading={teamsLoading} />
+            <TeamSearch placeholder="Real Madrid" value={b} onChange={setB} onPick={(n) => { if (a.trim()) void run(undefined, a, n); }} teams={teams} loading={teamsLoading} error={teamsError} />
             <button className="btn-primary mt-6 w-full" disabled={loading}>
-              <Radar className="h-4 w-4" /> {loading ? "Analyzing…" : "Analyze match with AI"}
+              <Radar className="h-4 w-4" /> {loading ? "Analyzing…" : "Analyze match"}
             </button>
           </form>
 
@@ -121,7 +135,9 @@ function AppPage() {
             ) : result ? (
               <>
                 <Result r={result} />
-                <p className="mt-6 text-center text-xs text-muted-foreground">Probabilities are estimates based on recent official results, not guaranteed outcomes.</p>
+                {result.probabilities && (
+                  <p className="mt-6 text-center text-xs text-muted-foreground">Probabilities are estimates based on recent official results, not guaranteed outcomes.</p>
+                )}
               </>
             ) : (
               <div className="py-8 text-center text-muted-foreground">
@@ -169,14 +185,20 @@ function Result({ r }: { r: Analysis }) {
         )}
       </div>
 
-      <div className="grid grid-cols-3 text-center">
-        {[[p.home, `${r.teamA.shortName} win`], [p.draw, "Draw"], [p.away, `${r.teamB.shortName} win`]].map(([v, l], i) => (
-          <div key={i}>
-            <div className={`font-display text-3xl font-extrabold ${i === 0 ? "text-primary" : ""}`}>{v}%</div>
-            <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{l}</div>
-          </div>
-        ))}
-      </div>
+      {p ? (
+        <div className="grid grid-cols-3 text-center">
+          {[[p.home, `${r.teamA.shortName} win`], [p.draw, "Draw"], [p.away, `${r.teamB.shortName} win`]].map(([v, l], i) => (
+            <div key={i}>
+              <div className={`font-display text-3xl font-extrabold ${i === 0 ? "text-primary" : ""}`}>{v}%</div>
+              <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{l}</div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-center text-sm text-muted-foreground">
+          Outcome estimates are unavailable: a scheduled meeting and recent finished results for both teams are required.
+        </p>
+      )}
 
       <div className="grid gap-6 md:grid-cols-2">
         <Form title={r.teamA.shortName} teamId={r.teamA.id} list={r.formA} />

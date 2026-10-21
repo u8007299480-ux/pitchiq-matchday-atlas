@@ -20,10 +20,10 @@ const RIGHT_IMG =
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "PitchIQ — Predict Every Match Before It Starts" },
-      { name: "description", content: "AI predictions for Premier League, Champions League and top European football, with real fixtures and kickoff times." },
-      { property: "og:title", content: "PitchIQ — Predict Every Match Before It Starts" },
-      { property: "og:description", content: "AI predictions with real fixtures, kickoff times and results." },
+      { title: "PitchIQ — Football Match Analysis" },
+      { name: "description", content: "Football match estimates based on recent results, with official fixtures and kickoff times." },
+      { property: "og:title", content: "PitchIQ — Football Match Analysis" },
+      { property: "og:description", content: "Match estimates based on recent results, with official fixtures and kickoff times." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:image", content: HERO },
@@ -64,13 +64,13 @@ function Hero() {
       <div className="absolute inset-0 bg-hero-overlay" />
       <div className="relative mx-auto flex max-w-4xl flex-col items-center px-6 py-28 text-center">
         <span className="flex items-center gap-2 rounded-full border border-border bg-background/70 px-4 py-1.5 text-sm">
-          <Star className="h-4 w-4 fill-gold text-gold" /> +100K satisfied users worldwide
+          <Star className="h-4 w-4 fill-gold text-gold" /> Official football data · estimates, not guarantees
         </span>
         <h1 className="display mt-8 text-5xl md:text-8xl">
           Predict every match before <span className="text-primary">it starts.</span>
         </h1>
         <p className="mt-8 max-w-xl text-muted-foreground">
-          AI analysis, advanced statistics and match scenarios to anticipate results — and understand the game better than anyone.
+          Match estimates based on recent official results, with clear fixture information and no guaranteed outcomes.
         </p>
         <form
           className="mt-10 flex w-full max-w-xl items-center gap-3 rounded-full border border-input bg-background/80 px-5 py-4"
@@ -89,7 +89,7 @@ function Hero() {
         </form>
         <p className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
           <Zap className="h-4 w-4 text-primary" />
-          <span className="font-semibold text-primary">92.2% accuracy</span> on the <b className="text-foreground">879 matches</b> analyzed last week
+          Estimates use recent official results when available.
         </p>
       </div>
     </section>
@@ -117,9 +117,9 @@ function Engine({ fixtures }: { fixtures: Fixture[] }) {
   const cards = fixtures.slice(0, 3);
   return (
     <section id="engine" className="relative mx-auto max-w-6xl px-6 py-24">
-      <p className="eyebrow text-center">Live AI predictions</p>
+      <p className="eyebrow text-center">Match estimates</p>
       <h2 className="display mt-4 text-center text-4xl md:text-5xl">
-        AI analysis to anticipate <span className="text-primary">every match.</span>
+        Match analysis for <span className="text-primary">upcoming games.</span>
       </h2>
       <div className="relative mt-16 flex justify-center">
         {cards[0] && <FloatCard f={cards[0]} className="left-0 top-4" />}
@@ -130,7 +130,7 @@ function Engine({ fixtures }: { fixtures: Fixture[] }) {
           <div className="rounded-[2rem] border border-border bg-background p-4">
             <div className="flex items-center justify-between"><Logo size="sm" /><Menu className="h-4 w-4 text-muted-foreground" /></div>
             <h3 className="mt-5 text-xl font-bold">Match Analysis</h3>
-            <p className="mt-2 text-xs text-muted-foreground">Enter the two teams you want to analyze. Our AI scans millions of data points for every prediction.</p>
+            <p className="mt-2 text-xs text-muted-foreground">Choose two teams to review their upcoming meeting, recent form and estimated outcomes.</p>
             <input className="field mt-4 py-2 text-sm" value={a} onChange={(e) => setA(e.target.value)} />
             <p className="my-1 text-center font-mono text-[10px] tracking-widest text-muted-foreground">VS</p>
             <input className="field py-2 text-sm" value={b} onChange={(e) => setB(e.target.value)} />
@@ -138,7 +138,7 @@ function Engine({ fixtures }: { fixtures: Fixture[] }) {
               className="btn-primary mt-3 w-full py-2.5 text-[11px]"
               onClick={() => navigate({ to: "/app", search: { a, b } })}
             >
-              <Radar className="h-4 w-4" /> Analyze match with AI
+              <Radar className="h-4 w-4" /> Analyze match
             </button>
             <p className="eyebrow mt-5 text-[10px] text-muted-foreground">Upcoming matches</p>
             <ul className="mt-2 space-y-2">
@@ -168,26 +168,32 @@ function Featured() {
       <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-6 py-20 lg:grid-cols-[1fr_2fr_1fr]">
         <img src={LEFT_IMG} alt="Player striking the ball under stadium lights" className="hidden h-72 w-full rounded-t-full object-cover lg:block" />
         <div className="text-center">
-          {f && p ? (
+          {f ? (
             <>
-              <p className="eyebrow">AI prediction · {f.competition.name}</p>
+              <p className="eyebrow">Match estimate · {f.competition.name}</p>
               <h2 className="display mt-4 text-4xl md:text-6xl">
                 {f.home.shortName} <span className="text-primary">vs</span> {f.away.shortName}
               </h2>
               <p className="mt-4 text-sm">{formatKickoff(f.utcDate).full}{f.venue ? ` · ${f.venue}` : ""}</p>
-              <div className="mx-auto mt-8 flex h-2 max-w-md overflow-hidden rounded-full bg-muted">
-                <div className="bg-primary" style={{ width: `${p.home}%` }} />
-                <div className="bg-muted-foreground" style={{ width: `${p.draw}%` }} />
-              </div>
-              <div className="mx-auto mt-6 grid max-w-md grid-cols-3">
-                <Stat v={p.home} l={`${f.home.tla || f.home.shortName} win`} hi />
-                <Stat v={p.draw} l="Draw" />
-                <Stat v={p.away} l={`${f.away.tla || f.away.shortName} win`} />
-              </div>
+              {p ? (
+                <>
+                  <div className="mx-auto mt-8 flex h-2 max-w-md overflow-hidden rounded-full bg-muted">
+                    <div className="bg-primary" style={{ width: `${p.home}%` }} />
+                    <div className="bg-muted-foreground" style={{ width: `${p.draw}%` }} />
+                  </div>
+                  <div className="mx-auto mt-6 grid max-w-md grid-cols-3">
+                    <Stat v={p.home} l={`${f.home.tla || f.home.shortName} win`} hi />
+                    <Stat v={p.draw} l="Draw" />
+                    <Stat v={p.away} l={`${f.away.tla || f.away.shortName} win`} />
+                  </div>
+                </>
+              ) : (
+                <p className="mt-6 text-sm text-muted-foreground">Recent completed results are not available for both teams, so no outcome estimate is shown.</p>
+              )}
               <Link to="/app" search={{ a: f.home.shortName, b: f.away.shortName }} className="btn-primary mt-8 rounded-full px-8">
                 <Radar className="h-4 w-4" /> Analysis ready
               </Link>
-              <p className="mt-3 text-xs">Based on each team's latest official results.</p>
+              {p && <p className="mt-3 text-xs">Based on each team's latest official results. Estimates are not guarantees.</p>}
             </>
           ) : (
             <p className="text-sm">{data.error ?? "No upcoming featured match right now."}</p>
