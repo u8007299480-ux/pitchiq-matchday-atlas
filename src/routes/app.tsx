@@ -5,11 +5,14 @@ import { BarChart3, CreditCard, Globe, History, LifeBuoy, Radar, Trophy, User } 
 import { Logo } from "@/components/Logo";
 import { Crest } from "@/components/FixtureRow";
 import { TeamSearch } from "@/components/TeamSearch";
+import { Paywall } from "@/components/Paywall";
+import { useSession } from "@/hooks/useSession";
+import { confirmCheckout } from "@/lib/billing.functions";
 import { analyzeMatch, getTeamDirectory, type Analysis, type TeamSuggestion } from "@/lib/football.functions";
 import { formatKickoff, resultFor, type Fixture } from "@/lib/football";
 
 export const Route = createFileRoute("/app")({
-  validateSearch: z.object({ a: z.string().optional(), b: z.string().optional() }),
+  validateSearch: z.object({ a: z.string().optional(), b: z.string().optional(), checkout: z.enum(["success", "cancelled"]).optional(), session_id: z.string().optional() }),
   head: () => ({
     meta: [
       { title: "Match Analysis — PitchIQ" },
@@ -32,6 +35,21 @@ function AppPage() {
   const [result, setResult] = useState<Analysis | null>(null);
   const [teams, setTeams] = useState<TeamSuggestion[]>([]);
   const [teamsLoading, setTeamsLoading] = useState(true);
+  const [locked, setLocked] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const { session, ready } = useSession();
+
+  useEffect(() => {
+    if (!ready) return;
+    if (search.checkout === "cancelled") setNotice("Checkout cancelled — you have not been charged.");
+    if (search.checkout === "success" && search.session_id && session) {
+      setNotice("Confirming your subscription…");
+      confirmCheckout({ data: { sessionId: search.session_id } })
+        .then((r) => setNotice(r.premium ? "Welcome to Premium! Your analyses are unlocked." : "Payment not confirmed yet. If you completed checkout, refresh in a moment."))
+        .catch(() => setNotice("We couldn't confirm your payment yet. Please refresh in a moment."));
+    }
+    if (search.checkout) window.history.replaceState(null, "", "/app");
+  }, [ready]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     getTeamDirectory()
@@ -43,10 +61,12 @@ function AppPage() {
   async function run(e?: React.FormEvent, ta = a, tb = b) {
     e?.preventDefault();
     if (ta.trim().length < 2 || tb.trim().length < 2) return;
-    setLoading(true);
     setError(null);
+    if (!session) { setLocked(true); setResult(null); return; }
+    setLoading(true);
     try {
       const res = await analyzeMatch({ data: { teamA: ta, teamB: tb } });
+      setLocked(res.locked);
       setResult(res.analysis);
       setError(res.error);
     } catch {
@@ -65,10 +85,10 @@ function AppPage() {
           <span className="flex items-center gap-3 rounded-lg bg-accent px-3 py-2.5 text-primary"><BarChart3 className="h-4 w-4" /> Matches</span>
           <Link to="/fixtures" className="flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-muted"><Trophy className="h-4 w-4" /> Competitions</Link>
           <span className="flex items-center gap-3 px-3 py-2.5 text-muted-foreground"><History className="h-4 w-4" /> History</span>
-          <span className="flex items-center gap-3 px-3 py-2.5 text-muted-foreground"><CreditCard className="h-4 w-4" /> Pricing <span className="ml-auto rounded-full bg-gold px-2 text-[10px] font-bold text-primary-foreground">PRO</span></span>
+          <Link to="/account" className="flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-muted"><CreditCard className="h-4 w-4" /> Pricing <span className="ml-auto rounded-full bg-gold px-2 text-[10px] font-bold text-primary-foreground">PRO</span></Link>
         </nav>
         <div className="mt-auto space-y-3 border-t border-border pt-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2 text-foreground"><User className="h-4 w-4" /> Guest</div>
+          <Link to="/account" className="flex items-center gap-2 text-foreground"><User className="h-4 w-4" /> {session ? "Account" : "Guest · Sign in"}</Link>
           <div className="flex items-center gap-2"><LifeBuoy className="h-4 w-4" /> Support</div>
           <div className="flex items-center gap-2"><Globe className="h-4 w-4" /> EN English</div>
         </div>
@@ -93,10 +113,16 @@ function AppPage() {
           </form>
 
           <div className="mt-6 rounded-2xl border border-border bg-card p-8">
-            {error ? (
+            {notice && <p className="mb-4 text-center text-sm text-primary">{notice}</p>}
+            {locked ? (
+              <Paywall signedIn={!!session} returnTo="/app" />
+            ) : error ? (
               <p className="text-center text-sm text-destructive">{error}</p>
             ) : result ? (
-              <Result r={result} />
+              <>
+                <Result r={result} />
+                <p className="mt-6 text-center text-xs text-muted-foreground">Probabilities are estimates based on recent official results, not guaranteed outcomes.</p>
+              </>
             ) : (
               <div className="py-8 text-center text-muted-foreground">
                 <Radar className="mx-auto h-10 w-10 text-primary" />
