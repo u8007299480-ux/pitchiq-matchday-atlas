@@ -155,9 +155,9 @@ export const analyzeMatch = createServerFn({ method: "POST" })
       const teams = await allTeams();
       const teamA = findTeam(teams, data.teamA);
       const teamB = findTeam(teams, data.teamB);
-      if (!teamA) return { analysis: null, error: `No team found for "${data.teamA}".` };
-      if (!teamB) return { analysis: null, error: `No team found for "${data.teamB}".` };
-      if (teamA.id === teamB.id) return { analysis: null, error: "Pick two different teams." };
+      if (!teamA) return { analysis: null, error: `No team found for "${data.teamA}".`, locked: false };
+      if (!teamB) return { analysis: null, error: `No team found for "${data.teamB}".`, locked: false };
+      if (teamA.id === teamB.id) return { analysis: null, error: "Pick two different teams.", locked: false };
 
       const venues = new Map(teams.filter((t) => t.venue).map((t) => [t.id, t.venue as string]));
       const sched = await fd<{ matches: RawMatch[] }>(`/teams/${teamA.id}/matches?status=SCHEDULED`);
@@ -184,8 +184,8 @@ export const analyzeMatch = createServerFn({ method: "POST" })
       const probabilities = homeId === teamA.id ? p : { home: p.away, draw: p.draw, away: p.home };
 
       const analysis: Analysis = { teamA, teamB, nextMeeting, headToHead, formA, formB, probabilities, homeId };
-      return { analysis, error: null as string | null };
+      return { analysis, error: null as string | null, locked: false };
     } catch (e) {
-      return { analysis: null, error: (e as Error).message };
+      return { analysis: null, error: (e as Error).message, locked: false };
     }
   });
