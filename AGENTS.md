@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Serialize the request-scoped React Query cache through the router's dehydrate/hydrate hooks so SSR and the browser start from the same fixture and prediction snapshot.

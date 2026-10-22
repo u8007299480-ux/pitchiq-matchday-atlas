@@ -1,4 +1,4 @@
-import { QueryClient } from "@tanstack/react-query";
+import { dehydrate, hydrate, QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 
@@ -8,6 +8,10 @@ export const getRouter = () => {
   const router = createRouter({
     routeTree,
     context: { queryClient },
+    dehydrate: () => ({ queryState: JSON.stringify(dehydrate(queryClient)) }),
+    hydrate: (dehydrated) => {
+      hydrate(queryClient, JSON.parse(dehydrated.queryState));
+    },
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
   });
