@@ -42,7 +42,7 @@ function Abonnement() {
           <ClientOnly fallback={<CheckoutFallback />}>
             <Suspense fallback={<CheckoutFallback />}>
               <WhopCheckoutEmbed
-                planId="plan_gQ2pKv975uI0V"
+                planId="plan_yDSv8L8HnCZw6"
                 returnUrl="https://pitchiq-matchday-atlas.lovable.app/success"
                 theme="light"
               />
