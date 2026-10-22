@@ -10,15 +10,22 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AbonnementRouteImport } from './routes/abonnement'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as FixturesRouteImport } from './routes/fixtures'
+import { Route as SuccessRouteImport } from './routes/success'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AbonnementRoute = AbonnementRouteImport.update({
+  id: '/abonnement',
+  path: '/abonnement',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccountRoute = AccountRouteImport.update({
@@ -41,6 +48,11 @@ const FixturesRoute = FixturesRouteImport.update({
   path: '/fixtures',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SuccessRoute = SuccessRouteImport.update({
+  id: '/success',
+  path: '/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
   id: '/api/public/stripe-webhook',
   path: '/api/public/stripe-webhook',
@@ -49,62 +61,76 @@ const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/abonnement': typeof AbonnementRoute
   '/account': typeof AccountRoute
   '/app': typeof AppRoute
   '/auth': typeof AuthRoute
   '/fixtures': typeof FixturesRoute
+  '/success': typeof SuccessRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/abonnement': typeof AbonnementRoute
   '/account': typeof AccountRoute
   '/app': typeof AppRoute
   '/auth': typeof AuthRoute
   '/fixtures': typeof FixturesRoute
+  '/success': typeof SuccessRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/abonnement': typeof AbonnementRoute
   '/account': typeof AccountRoute
   '/app': typeof AppRoute
   '/auth': typeof AuthRoute
   '/fixtures': typeof FixturesRoute
+  '/success': typeof SuccessRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/abonnement'
     | '/account'
     | '/app'
     | '/auth'
     | '/fixtures'
+    | '/success'
     | '/api/public/stripe-webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/abonnement'
     | '/account'
     | '/app'
     | '/auth'
     | '/fixtures'
+    | '/success'
     | '/api/public/stripe-webhook'
   id:
     | '__root__'
     | '/'
+    | '/abonnement'
     | '/account'
     | '/app'
     | '/auth'
     | '/fixtures'
+    | '/success'
     | '/api/public/stripe-webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AbonnementRoute: typeof AbonnementRoute
   AccountRoute: typeof AccountRoute
   AppRoute: typeof AppRoute
   AuthRoute: typeof AuthRoute
   FixturesRoute: typeof FixturesRoute
+  SuccessRoute: typeof SuccessRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
 }
 
@@ -115,6 +141,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/abonnement': {
+      id: '/abonnement'
+      path: '/abonnement'
+      fullPath: '/abonnement'
+      preLoaderRoute: typeof AbonnementRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/account': {
@@ -145,6 +178,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FixturesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/success': {
+      id: '/success'
+      path: '/success'
+      fullPath: '/success'
+      preLoaderRoute: typeof SuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/stripe-webhook': {
       id: '/api/public/stripe-webhook'
       path: '/api/public/stripe-webhook'
@@ -157,10 +197,12 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AbonnementRoute: AbonnementRoute,
   AccountRoute: AccountRoute,
   AppRoute: AppRoute,
   AuthRoute: AuthRoute,
   FixturesRoute: FixturesRoute,
+  SuccessRoute: SuccessRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport

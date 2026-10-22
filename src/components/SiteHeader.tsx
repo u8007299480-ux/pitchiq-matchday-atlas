@@ -22,6 +22,9 @@ export function SiteHeader({ live }: { live: boolean | null }) {
               {live ? "Live data" : "Data offline"}
             </span>
           )}
+          <Link to="/abonnement" className="btn-primary !px-4 !py-2 text-[11px]">
+            S'abonner
+          </Link>
           <Link to="/app" className="flex items-center gap-1 font-mono text-sm font-bold tracking-[0.2em]">
             <ChevronsRight className="h-4 w-4 text-primary" /> OPEN APP
           </Link>
