@@ -1,0 +1,3 @@
+- [ ] Add two data-derived scenario sections without changing existing analysis.
+- [ ] Test scenario ranking, evidence limits and match-specific generation.
+- [ ] Check existing analysis and scenario display on desktop and mobile; report any access blocker.
