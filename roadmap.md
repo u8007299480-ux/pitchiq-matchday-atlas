@@ -1,0 +1,4 @@
+- [x] Add two data-derived scenario sections without changing existing analysis.
+- [x] Test scenario ranking, evidence limits and match-specific generation (12 tests passed, including existing regression tests).
+- [x] Check signed-out paywall and isolated scenario display with a real featured fixture at desktop and 390/320px mobile widths; no overflow or runtime errors.
+- [ ] Verify full signed-in Premium analysis with recent results: blocked because the requesting user has no existing auth account/session; do not mint another user's session or change entitlements.

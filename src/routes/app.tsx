@@ -6,6 +6,7 @@ import { Logo } from "@/components/Logo";
 import { Crest } from "@/components/FixtureRow";
 import { TeamSearch } from "@/components/TeamSearch";
 import { Paywall } from "@/components/Paywall";
+import { MatchScenarios } from "@/components/MatchScenarios";
 import { useSession } from "@/hooks/useSession";
 import { confirmCheckout } from "@/lib/billing.functions";
 import { analyzeMatch, getTeamDirectory, type Analysis, type TeamSuggestion } from "@/lib/football.functions";
@@ -192,6 +193,7 @@ function Result({ r }: { r: Analysis }) {
           <ul className="mt-3 space-y-2">{r.headToHead.map((m) => <ScoreRow key={m.id} m={m} />)}</ul>
         </div>
       )}
+      <MatchScenarios analysis={r} />
     </div>
   );
 }
